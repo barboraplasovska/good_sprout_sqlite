@@ -1,6 +1,4 @@
-// rounded_button.dart
-
-import 'package:plant_app/constants.dart';
+import 'package:good_sprout/constants.dart';
 import 'package:flutter/material.dart';
 
 class RoundedButton extends StatelessWidget {
@@ -35,7 +33,7 @@ class RoundedButton extends StatelessWidget {
           ),
           child: Text(
             text,
-            style: Theme.of(context).textTheme.headline4,
+            style: Theme.of(context).textTheme.headline5,
           ),
         ),
       ),

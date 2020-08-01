@@ -1,131 +1,75 @@
-// database.dart
-
+import 'package:good_sprout/models/plant.dart';
+import 'dart:async';
+import 'dart:io';
 import 'package:path/path.dart';
-import 'package:plant_app/models/plant.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
-class DatabaseHelper {
-  static const String TABLE_PLANTS = "plants";
-  static const String COLUMN_ID = "id";
-  static const String COLUMN_PLANT_NAME = "plant_name";
-  static const String COLUMN_PLANT_TYPE = "plant_type";
-  static const String COLUMN_WATERING_FREQUENCY = "watering_frequency";
-  static const String COLUMN_IS_WATERED = "is_watered";
+class DBProvider {
+  DBProvider._();
 
-  //Create a private constructor
-  DatabaseHelper._();
+  static final DBProvider db = DBProvider._();
 
-  static const databaseName = 'plants_database.db';
-  static final DatabaseHelper instance = DatabaseHelper._();
-  static Database _database;
-  List<Plant> plantList = List<Plant>();
+  Database _database;
 
   Future<Database> get database async {
-    if (_database == null) {
-      print('Creating new database.');
-      return await createDatabase();
-    }
-    print('Returning database.');
+    if (_database != null) return _database;
+    // if _database is null we instantiate it
+    _database = await initDB();
     return _database;
   }
 
-  createDatabase() async {
-    return await openDatabase(join(await getDatabasesPath(), databaseName),
-        version: 1, onCreate: (Database db, int version) async {
-      print('createDatabase(): --> Creating plan table.');
-      await db.execute("CREATE TABLE $TABLE_PLANTS ("
-          "$COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,"
-          "$COLUMN_PLANT_NAME TEXT,"
-          "$COLUMN_PLANT_TYPE TEXT,"
-          "$COLUMN_WATERING_FREQUENCY INTEGER,"
-          "$COLUMN_IS_WATERED INTEGER"
+  initDB() async {
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    String path = join(documentsDirectory.path, "TestDB.db");
+    return await openDatabase(path, version: 1, onOpen: (db) {},
+        onCreate: (Database db, int version) async {
+      await db.execute("CREATE TABLE Plant ("
+          "plant_name TEXT,"
+          "plant_type TEXT,"
+          "watering_frequency INT"
           ")");
     });
   }
 
-  insertPlant(Plant plant) async {
+  newPlant(Plant newPlant) async {
     final db = await database;
+    var raw = await db.rawInsert(
+        "INSERT Into Plant (plant_name, plant_type, watering_frequency)"
+        " VALUES (?,?,?,?)",
+        [newPlant.plantName, newPlant.plantType, newPlant.wateringFrequency]);
+    return raw;
+  }
 
-    print('insertPlant(): --> Plant ${plant.plantName} added.');
-
-    var res = await db.insert(TABLE_PLANTS, plant.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+  updatePlant(Plant newPlant) async {
+    final db = await database;
+    var res = await db.update("Plant", newPlant.toMap(),
+        where: "plant_name = ?", whereArgs: [newPlant.plantName]);
     return res;
   }
 
-  Future<List<Plant>> getPlants() async {
+  getPlant(String plantName) async {
     final db = await database;
-
-    var plants = await db.query(
-      TABLE_PLANTS,
-      columns: [
-        COLUMN_ID,
-        COLUMN_PLANT_NAME,
-        COLUMN_PLANT_TYPE,
-        COLUMN_WATERING_FREQUENCY,
-        COLUMN_IS_WATERED
-      ],
-      orderBy: COLUMN_IS_WATERED,
-    );
-    List<Plant> plantList = List<Plant>();
-
-    plants.forEach((currentPlant) {
-      Plant plant = Plant.fromMap(currentPlant);
-
-      plantList.add(plant);
-    });
-
-    print('Number of plants: ${plantList.length}');
-    print('getPlants(): --> Get plants done.');
-
-    return plantList;
+    var res = await db
+        .query("Plant", where: "plant_name = ?", whereArgs: [plantName]);
+    return res.isNotEmpty ? Plant.fromMap(res.first) : null;
   }
 
-  Future<int> updatePlant(Plant plant) async {
+  Future<List<Plant>> getAllPlants() async {
     final db = await database;
-
-    print('Plant ${plant.plantName} updated.');
-
-    return await db.update(TABLE_PLANTS, plant.toMap(),
-        where: 'id = ?',
-        whereArgs: [plant.id],
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    var res = await db.query("Plant");
+    List<Plant> list =
+        res.isNotEmpty ? res.map((c) => Plant.fromMap(c)).toList() : [];
+    return list;
   }
 
-  Future<int> deletePlant(int id) async {
-    var db = await database;
-
-    print('deletePlant(): --> Plant deleted.');
-    return await db.delete(
-      TABLE_PLANTS,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  deletePlant(String plantName) async {
+    final db = await database;
+    return db.delete("Plant", where: "plant_name = ?", whereArgs: [plantName]);
   }
 
-  Future<int> getCount() async {
-    var db = await database;
-
-    var plants = await db.query(
-      TABLE_PLANTS,
-      columns: [
-        COLUMN_ID,
-        COLUMN_PLANT_NAME,
-        COLUMN_PLANT_TYPE,
-        COLUMN_WATERING_FREQUENCY,
-        COLUMN_IS_WATERED
-      ],
-      orderBy: COLUMN_IS_WATERED,
-    );
-    List<Plant> plantList = List<Plant>();
-
-    plants.forEach((currentPlant) {
-      Plant plant = Plant.fromMap(currentPlant);
-
-      plantList.add(plant);
-    });
-
-    print('${plantList.length}');
-    return plantList.length;
+  deleteAll() async {
+    final db = await database;
+    db.rawDelete("Delete * from Plant");
   }
 }

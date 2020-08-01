@@ -1,10 +1,8 @@
-// main_drawer.dart
-
 import 'package:flutter/material.dart';
-import 'package:plant_app/constants.dart';
-import 'package:plant_app/services/database.dart';
+import 'package:good_sprout/constants.dart';
 
 class MainDrawer extends StatelessWidget {
+  final String numberOfPlants = '';
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -18,7 +16,7 @@ class MainDrawer extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.only(top: 20),
               child: Text(
-                'Settings',
+                'Setings',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 30,
@@ -33,7 +31,7 @@ class MainDrawer extends StatelessWidget {
               padding: EdgeInsets.all(26.0),
               children: <Widget>[
                 Text(
-                  'My plants: ${DatabaseHelper.instance.getCount()} ',
+                  'My plants: $numberOfPlants',
                   style: Theme.of(context).textTheme.bodyText2,
                 ),
                 SizedBox(

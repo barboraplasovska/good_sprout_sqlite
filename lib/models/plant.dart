@@ -1,42 +1,31 @@
-// plant.dart
+import 'dart:convert';
 
-import 'package:plant_app/services/database.dart';
+Plant clientFromJson(String str) {
+  final jsonData = json.decode(str);
+  return Plant.fromMap(jsonData);
+}
+
+String clientToJson(Plant data) {
+  final dyn = data.toMap();
+  return json.encode(dyn);
+}
 
 class Plant {
-  int id;
   String plantName;
   String plantType;
   int wateringFrequency;
-  bool isWatered;
 
-  Plant({
-    this.id,
-    this.plantName,
-    this.plantType,
-    this.wateringFrequency,
-    this.isWatered,
-  });
+  Plant({this.plantName, this.plantType, this.wateringFrequency});
 
-  Map<String, dynamic> toMap() {
-    var map = <String, dynamic>{
-      DatabaseHelper.COLUMN_ID: id,
-      DatabaseHelper.COLUMN_PLANT_NAME: plantName,
-      DatabaseHelper.COLUMN_PLANT_TYPE: plantType,
-      DatabaseHelper.COLUMN_WATERING_FREQUENCY: wateringFrequency,
-      DatabaseHelper.COLUMN_IS_WATERED: isWatered ? 1 : 0
-    };
+  factory Plant.fromMap(Map<String, dynamic> json) => new Plant(
+        plantName: json["plant_name"],
+        plantType: json["plant_type"],
+        wateringFrequency: json["watering_frequency"],
+      );
 
-    if (id != null) {
-      map[DatabaseHelper.COLUMN_ID] = id;
-    }
-    return map;
-  }
-
-  Plant.fromMap(Map<String, dynamic> map) {
-    id = map[DatabaseHelper.COLUMN_ID];
-    plantName = map[DatabaseHelper.COLUMN_PLANT_NAME];
-    plantType = map[DatabaseHelper.COLUMN_PLANT_TYPE];
-    wateringFrequency = map[DatabaseHelper.COLUMN_WATERING_FREQUENCY];
-    isWatered = map[DatabaseHelper.COLUMN_IS_WATERED] == 1;
-  }
+  Map<String, dynamic> toMap() => {
+        "plant_name": plantName,
+        "plant_type": plantType,
+        "watering_frequency": wateringFrequency,
+      };
 }
